@@ -1,5 +1,6 @@
 const Task = require('../models/task');
 const { v4: uuidv4 } = require('uuid');
+const statsController = require('./statsController');
 
 // Create a new task
 exports.createTask = async (req, res) => {
@@ -10,6 +11,7 @@ exports.createTask = async (req, res) => {
             Days: req.body.Days,
         });
         await newTask.save();
+        statsController.initializeStatistics();
         res.status(201).json(newTask);
     } catch (error) {
         res.status(500).json({ error: 'Failed to create task' });
@@ -54,6 +56,7 @@ exports.updateTaskById = async (req, res) => {
         if (!updatedTask) {
             return res.status(404).json({ error: 'Task not found' });
         }
+        statsController.initializeStatistics();
         res.status(200).json(updatedTask);
     } catch (error) {
         res.status(500).json({ error: 'Failed to update task' });
@@ -67,6 +70,7 @@ exports.deleteTaskById = async (req, res) => {
         if (!deletedTask) {
             return res.status(404).json({ error: 'Task not found' });
         }
+        statsController.initializeStatistics();
         res.status(200).json({ message: 'Task deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete task' });

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Statistics</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        canvas {
+            margin: 20px 0;
+        }
+
+        .filters {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .filters select,
+        .filters button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .filters button:hover {
+            background: #f0f0f0;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Task Statistics</h2>
+        <div class="filters">
+            <div>
+                <label for="timeRange">Select Time Range:</label>
+                <select id="timeRange">
+                    <option value="overall">Overall</option>
+                    <option value="year">Year</option>
+                    <option value="month">Month</option>
+                </select>
+            </div>
+            <div>
+                <label for="dayFilter">Filter by Day:</label>
+                <select id="dayFilter">
+                    <option value="all">All Days</option>
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                    <option value="Sunday">Sunday</option>
+                </select>
+            </div>
+            <!-- <div>
+                <label for="taskFilter">Select Task:</label>
+                <select id="taskFilter">
+                </select>
+            </div> -->
+        </div>
+        <div>
+            <canvas id="taskCompletionChart"></canvas>
+            <canvas id="taskCompletionPieChart"></canvas>
+            <div>
+                <label for="taskFilter">Select Task:</label>
+                <select id="taskFilter">
+                    <!-- Task options will be dynamically populated -->
+                </select>
+            </div>
+            <h3 id="individualTaskHeading"></h3>
+            <canvas id="individualTaskChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const timeRangeSelector = document.getElementById('timeRange');
+            const dayFilterSelector = document.getElementById('dayFilter');
+            const taskFilterSelector = document.getElementById('taskFilter');
+            const taskCompletionChartCanvas = document.getElementById('taskCompletionChart').getContext('2d');
+            const taskCompletionPieChartCanvas = document.getElementById('taskCompletionPieChart').getContext('2d');
+            const individualTaskChartCanvas = document.getElementById('individualTaskChart').getContext('2d');
+            const individualTaskHeading = document.getElementById('individualTaskHeading');
+
+            let taskCompletionChart;
+            let taskCompletionPieChart;
+            let individualTaskChart;
+
+            const fetchStatisticsData = async (timeRange) => {
+                let url = 'http://localhost:3000/api/statistics/statistics';
+                if (timeRange !== 'overall') {
+                    url += `?timeRange=${timeRange}`;
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch statistics data');
+                }
+                return await response.json();
+            };
+
+            const renderCharts = async (timeRange, dayFilter = 'all', selectedTask = null) => {
+                const statisticsData = await fetchStatisticsData(timeRange);
+
+                var tasks = [];
+                for (var i = 0; i < statisticsData.length; i++) {
+                    tasks = [...Object.keys(statisticsData[i].tasks)]
+                }
+                const taskCounts = tasks.reduce((acc, task) => {
+                    acc[task] = { completed: 0, total: 0 };
+                    return acc;
+                }, {});
+
+                statisticsData.forEach(stat => {
+                    if (dayFilter === 'all' || stat.Created_On.includes(dayFilter)) {
+                        for (const [task, status] of Object.entries(stat.tasks)) {
+                            if (taskCounts[task] !== undefined) {
+                                taskCounts[task].total += 1;
+                                if (status) {
+                                    taskCounts[task].completed += 1;
+                                }
+                            }
+                        }
+                    }
+                });
+
+                const taskLabels = Object.keys(taskCounts);
+                const taskCompletionPercentages = taskLabels.map(task => {
+                    const count = taskCounts[task];
+                    return (count.completed / count.total) * 100;
+                });
+
+                const pieData = taskLabels.map(task => taskCounts[task].completed);
+
+                // Destroy existing charts if they exist
+                if (taskCompletionChart) {
+                    taskCompletionChart.destroy();
+                }
+                if (taskCompletionPieChart) {
+                    taskCompletionPieChart.destroy();
+                }
+
+                taskCompletionChart = new Chart(taskCompletionChartCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: taskLabels,
+                        datasets: [{
+                            label: 'Task Completion Percentage',
+                            data: taskCompletionPercentages,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+
+                taskCompletionPieChart = new Chart(taskCompletionPieChartCanvas, {
+                    type: 'pie',
+                    data: {
+                        labels: taskLabels,
+                        datasets: [{
+                            data: pieData,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.2)',
+                                'rgba(54, 162, 235, 0.2)',
+                                'rgba(255, 206, 86, 0.2)',
+                                'rgba(75, 192, 192, 0.2)',
+                                'rgba(153, 102, 255, 0.2)',
+                                'rgba(255, 159, 64, 0.2)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)',
+                                'rgba(255, 159, 64, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    }
+                });
+
+                // Populate task filter options
+                taskFilterSelector.innerHTML = '';
+                taskLabels.forEach(task => {
+                    const option = document.createElement('option');
+                    option.value = task;
+                    option.textContent = task;
+                    taskFilterSelector.appendChild(option);
+                });
+
+                if (selectedTask) {
+                    renderIndividualTaskChart(statisticsData, selectedTask);
+                }
+            };
+
+            const renderIndividualTaskChart = (statisticsData, task) => {
+                const taskDates = [];
+                const taskCompletionRates = [];
+
+                statisticsData.forEach(stat => {
+                    taskDates.push(stat.Created_On.split('T')[0]); // Extract date only
+                    taskCompletionRates.push(stat.tasks[task] ? 100 : 0);
+                });
+
+                if (individualTaskChart) {
+                    individualTaskChart.destroy();
+                }
+
+                individualTaskChart = new Chart(individualTaskChartCanvas, {
+                    type: 'line',
+                    data: {
+                        labels: taskDates,
+                        datasets: [{
+                            label: `Completion Rate for ${task}`,
+                            data: taskCompletionRates,
+                            fill: false,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+
+                individualTaskHeading.textContent = `Completion Rate for ${task}`;
+            };
+
+            // Render initial charts for overall statistics
+            await renderCharts('overall');
+
+            // Add event listeners for filters
+            timeRangeSelector.addEventListener('change', async () => {
+                const selectedTimeRange = timeRangeSelector.value;
+                const selectedDay = dayFilterSelector.value;
+                const selectedTask = taskFilterSelector.value;
+                await renderCharts(selectedTimeRange, selectedDay, selectedTask);
+            });
+
+            dayFilterSelector.addEventListener('change', async () => {
+                const selectedTimeRange = timeRangeSelector.value;
+                const selectedDay = dayFilterSelector.value;
+                const selectedTask = taskFilterSelector.value;
+                await renderCharts(selectedTimeRange, selectedDay, selectedTask);
+            });
+
+            taskFilterSelector.addEventListener('change', async () => {
+                const selectedTimeRange = timeRangeSelector.value;
+                const selectedDay = dayFilterSelector.value;
+                const selectedTask = taskFilterSelector.value;
+                await renderCharts(selectedTimeRange, selectedDay, selectedTask);
+            });
+        });
+    </script>
+</body>
+
+</html>

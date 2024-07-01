@@ -56,25 +56,46 @@
 
             // Fetch tasks for today from the backend
             try {
-                const response = await fetch('http://localhost:3000/api/tasks');
+                const response = await fetch('http://localhost:3000/api/statistics');
                 if (!response.ok) {
-                    throw new Error('Failed to fetch tasks');
+                    throw new Error('Failed to fetch statistics');
                 }
-                const tasks = await response.json();
-
-                // Filter tasks for the current day
-                const todayTasks = tasks.filter(task => task.Days[dayOfWeek]);
+                const statistics = await response.json();
+                const todayTasks = statistics.tasks;
 
                 // Display tasks in the list
-                todayTasks.forEach(task => {
+                for (const [task, status] of Object.entries(todayTasks)) {
                     const taskItem = document.createElement('div');
                     taskItem.classList.add('task-item');
                     taskItem.innerHTML = `
-                        <input type="checkbox" id="${task.Task_Id}">
-                        <label for="${task.Task_Id}">${task.Task}</label>
+                        <input type="checkbox" id="${task}" ${status ? 'checked' : ''}>
+                        <label for="${task}">${task}</label>
                     `;
                     taskList.appendChild(taskItem);
-                });
+
+                    // Add event listener for checkbox change
+                    const checkbox = taskItem.querySelector('input[type="checkbox"]');
+                    checkbox.addEventListener('change', async function() {
+                        const updatedTasks = { [task]: checkbox.checked };
+
+                        try {
+                            const response = await fetch('http://localhost:3000/api/statistics', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ tasks: updatedTasks })
+                            });
+                            if (!response.ok) {
+                                throw new Error('Failed to update statistics');
+                            }
+                            const updatedStatistics = await response.json();
+                            console.log('Statistics updated:', updatedStatistics);
+                        } catch (error) {
+                            console.error('Error updating statistics:', error);
+                        }
+                    });
+                }
             } catch (error) {
                 console.error('Error fetching tasks:', error);
             }
