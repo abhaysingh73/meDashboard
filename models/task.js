@@ -25,8 +25,22 @@ const taskSchema = new mongoose.Schema({
         Thursday: { type: Boolean, default: false },
         Friday: { type: Boolean, default: false },
         Saturday: { type: Boolean, default: false },
-        Sunday: { type: Boolean, default: false },
+        Sunday: { type: Boolean, default: false }
     },
+    Category: {
+        type: String,
+        enum: ['work', 'personal', 'health'],
+        default: 'personal'
+    },
+    Priority: {
+        type: String,
+        enum: ['high', 'medium', 'low'],
+        default: 'medium'
+    },
+    Details: {
+        type: String,
+        default: ''
+    }
 });
 
 module.exports = mongoose.model('Task', taskSchema);

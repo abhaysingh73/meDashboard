@@ -9,6 +9,9 @@ exports.createTask = async (req, res) => {
             Task: req.body.Task,
             Task_Id: uuidv4(),
             Days: req.body.Days,
+            Category: req.body.Category,
+            Priority: req.body.Priority,
+            Details: req.body.Details,
         });
         await newTask.save();
         statsController.initializeStatistics();
@@ -50,6 +53,9 @@ exports.updateTaskById = async (req, res) => {
                 Task: req.body.Task,
                 Modified_On: Date.now(),
                 Days: req.body.Days,
+                Category: req.body.Category,
+                Priority: req.body.Priority,
+                Details: req.body.Details,
             },
             { new: true }
         );

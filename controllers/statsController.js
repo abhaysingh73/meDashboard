@@ -2,6 +2,7 @@ const Statistics = require('../models/statistics');
 const Task = require('../models/task'); // Assuming you have a task model
 const moment = require('moment');
 const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+var today = moment().format("DD-MM-YYYY");
 // Create or update statistics for today
 exports.statistics = async (req, res) => {
     try {
@@ -103,6 +104,10 @@ exports.initializeStatistics = async () => {
 
 exports.getTodaysStatistics = async (req, res) => {
     try {
+        if(today && today !== moment().format("DD-MM-YYYY")){
+            today = moment().format("DD-MM-YYYY");
+            await initializeStatistics();
+        }
         const startOfDay = moment().startOf('day').toDate(); // Start of today (00:00:00)
         const endOfDay = moment().endOf('day').toDate();     // End of today (23:59:59)
         let statistics = await Statistics.findOne({

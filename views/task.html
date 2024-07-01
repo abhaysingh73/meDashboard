@@ -11,6 +11,7 @@
             margin: 0;
             padding: 20px;
         }
+
         .container {
             max-width: 600px;
             margin: auto;
@@ -19,28 +20,33 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
         }
+
         .header {
             text-align: center;
             margin-bottom: 20px;
         }
+
         #noteList {
             margin: 0;
             padding: 0;
             list-style: none;
         }
+
         .note-item {
             position: relative;
             background: #fff;
             margin: 10px 0;
             padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             cursor: move;
             transition: box-shadow 0.3s ease-in-out;
         }
+
         .note-item:hover {
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
+
         .note-item .days {
             display: inline-block;
             font-size: 0.8em;
@@ -48,16 +54,30 @@
             margin-left: 10px;
             vertical-align: middle;
         }
-        .note-item .action-buttons {
+
+        .note-item .priority-badge {
+            position: absolute;
+            top: -10px;
+            left: 5px;
+            padding: 5px;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .action-buttons {
             display: none;
             position: absolute;
             top: 50%;
             right: 10px;
             transform: translateY(-50%);
         }
+
         .note-item:hover .action-buttons {
             display: block;
         }
+
         .action-buttons button {
             margin-left: 5px;
             padding: 5px 10px;
@@ -68,15 +88,18 @@
             border-radius: 5px;
             outline: none;
         }
+
         .action-buttons .delete-button {
             background: #f44336;
         }
+
         .day-buttons {
             margin-bottom: 20px;
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
         }
+
         .day-buttons button {
             margin: 5px;
             padding: 8px 12px;
@@ -88,27 +111,31 @@
             outline: none;
             transition: background-color 0.3s ease-in-out;
         }
+
         .day-buttons button.selected {
             background: #4caf50;
             color: #fff;
         }
+
         #noteArea {
-            width: calc(100% - 40px);
+            width: 96%;
             height: 120px;
             margin: 10px 0;
             padding: 10px;
             background: #fff;
             border: 1px solid #ddd;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             outline: none;
             resize: none;
             font-size: 16px;
             transition: box-shadow 0.3s ease-in-out;
         }
+
         #noteArea:focus {
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
+
         #saveButton {
             display: none;
             width: 100px;
@@ -122,8 +149,62 @@
             outline: none;
             transition: background-color 0.3s ease-in-out;
         }
+
         #saveButton:hover {
             background-color: #45a049;
+        }
+
+        .priority-slider-container {
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .priority-slider {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .priority-label {
+            min-width: 60px;
+            text-align: right;
+            margin-right: 10px;
+        }
+
+        .category-radio {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-radio label {
+            margin-right: 10px;
+        }
+
+        #detailsArea {
+            width: 96%;
+            height: 80px;
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            resize: none;
+            font-size: 16px;
+            outline: none;
         }
     </style>
 </head>
@@ -132,16 +213,28 @@
         <h2 class="header">Notepad</h2>
         <ul id="noteList"></ul>
         <div class="day-buttons">
-            <button id="everyday">Everyday</button>
-            <button class="day" data-day="Monday">Monday</button>
-            <button class="day" data-day="Tuesday">Tuesday</button>
-            <button class="day" data-day="Wednesday">Wednesday</button>
-            <button class="day" data-day="Thursday">Thursday</button>
-            <button class="day" data-day="Friday">Friday</button>
-            <button class="day" data-day="Saturday">Saturday</button>
-            <button class="day" data-day="Sunday">Sunday</button>
+             <button id="everyday">Everyday</button>
+            <button class="day" data-day="Monday">Mon</button>
+            <button class="day" data-day="Tuesday">Tue</button>
+            <button class="day" data-day="Wednesday">Wed</button>
+            <button class="day" data-day="Thursday">Thu</button>
+            <button class="day" data-day="Friday">Fri</button>
+            <button class="day" data-day="Saturday">Sat</button>
+            <button class="day" data-day="Sunday">Sun</button>
+        </div>
+        <div class="priority-slider-container">
+            <label class="priority-label">Priority:</label>
+            <input id="prioritySlider" class="priority-slider" type="range" min="1" max="3" value="2" step="1">
+            <span id="priorityValue"></span>
         </div>
         <textarea id="noteArea" placeholder="Add new task"></textarea>
+        
+        <div class="category-radio">
+            <label><input type="radio" name="category" value="work"> Work</label>
+            <label><input type="radio" name="category" value="personal" checked> Personal</label>
+            <label><input type="radio" name="category" value="health"> Health</label>
+        </div>
+        <textarea id="detailsArea" placeholder="Optional: Add details" style="display: none;"></textarea>
         <button id="saveButton">SAVE</button>
     </div>
 
@@ -151,15 +244,45 @@
         const noteList = document.getElementById('noteList');
         const everydayButton = document.getElementById('everyday');
         const dayButtons = document.querySelectorAll('.day');
+        const prioritySlider = document.getElementById('prioritySlider');
+        const priorityValue = document.getElementById('priorityValue');
+        const categoryRadios = document.querySelectorAll('input[name="category"]');
+        const detailsArea = document.getElementById('detailsArea');
 
         noteArea.addEventListener('input', () => {
             saveButton.style.display = noteArea.value.trim() ? 'block' : 'none';
         });
 
+        prioritySlider.addEventListener('input', () => {
+            updatePriorityLabel(prioritySlider.value);
+        });
+
+        function updatePriorityLabel(value) {
+            let label = '';
+            switch (value) {
+                case '1':
+                    label = 'Low';
+                    break;
+                case '2':
+                    label = 'Medium';
+                    break;
+                case '3':
+                    label = 'High';
+                    break;
+                default:
+                    label = 'Medium';
+                    break;
+            }
+            priorityValue.textContent = label;
+        }
+
         saveButton.addEventListener('click', async () => {
             const noteText = noteArea.value.trim();
             if (noteText) {
                 const selectedDays = getSelectedDays();
+                const priority = getPriorityLabel(prioritySlider.value);
+                const category = document.querySelector('input[name="category"]:checked').value;
+                const details = detailsArea.value.trim();
                 const taskId = saveButton.getAttribute('data-task-id');
 
                 if (taskId) {
@@ -168,6 +291,9 @@
                         const updatedTask = {
                             Task: noteText,
                             Days: createDaysObject(selectedDays),
+                            Priority: priority,
+                            Category: category,
+                            Details: details,
                         };
                         const response = await fetch(`http://localhost:3000/api/tasks/${taskId}`, {
                             method: 'PUT',
@@ -180,6 +306,7 @@
                             const updatedTaskData = await response.json();
                             updateNoteInList(taskId, updatedTaskData);
                             noteArea.value = '';
+                            detailsArea.value = '';
                             saveButton.removeAttribute('data-task-id');
                             saveButton.style.display = 'none';
                             clearSelection();
@@ -195,6 +322,9 @@
                         const newTask = {
                             Task: noteText,
                             Days: createDaysObject(selectedDays),
+                            Priority: priority,
+                            Category: category,
+                            Details: details,
                         };
                         const response = await fetch('http://localhost:3000/api/tasks', {
                             method: 'POST',
@@ -207,6 +337,7 @@
                             const savedTask = await response.json();
                             addNoteToList(savedTask);
                             noteArea.value = '';
+                            detailsArea.value = '';
                             saveButton.style.display = 'none';
                             clearSelection();
                         } else {
@@ -269,6 +400,19 @@
             return days;
         }
 
+        function getPriorityLabel(value) {
+            switch (value) {
+                case '1':
+                    return 'Low';
+                case '2':
+                    return 'Medium';
+                case '3':
+                    return 'High';
+                default:
+                    return 'Medium';
+            }
+        }
+
         async function loadTasks() {
             try {
                 const response = await fetch('http://localhost:3000/api/tasks');
@@ -282,10 +426,12 @@
         function addNoteToList(task) {
             const listItem = document.createElement('li');
             listItem.className = 'note-item';
-            listItem.draggable = true;
             listItem.setAttribute('data-id', task.Task_Id);
             listItem.innerHTML = `
+                <div class="priority-badge" style="background-color: ${getPriorityColor(task.Priority)};">${task.Priority}</div>
                 ${task.Task} <span class="days">${formatDays(task.Days)}</span>
+                <div class="details">${task.Details ? `Details: ${task.Details}` : ''}</div>
+                <div class="category">Category: ${task.Category}</div>
                 <div class="action-buttons">
                     <button class="edit-button">EDIT</button>
                     <button class="delete-button">DELETE</button>
@@ -304,16 +450,17 @@
             if (selectedDays.length === 7) {
                 return 'Everyday';
             } else {
-                return Object.keys(days)
-                .filter(day => days[day])
-                .join(', ');
+                return selectedDays.join(', ');
             }
         }
 
         function updateNoteInList(taskId, updatedTask) {
             const listItem = noteList.querySelector(`li[data-id="${taskId}"]`);
             listItem.innerHTML = `
+                <div class="priority-badge" style="background-color: ${getPriorityColor(updatedTask.Priority)};">${updatedTask.Priority}</div>
                 ${updatedTask.Task} <span class="days">${formatDays(updatedTask.Days)}</span>
+                <div class="details">${updatedTask.Details ? `Details: ${updatedTask.Details}` : ''}</div>
+                <div class="category">Category: ${updatedTask.Category}</div>
                 <div class="action-buttons">
                     <button class="edit-button">EDIT</button>
                     <button class="delete-button">DELETE</button>
@@ -324,6 +471,9 @@
 
         function editNoteItem(listItem, task) {
             noteArea.value = task.Task;
+            prioritySlider.value = getPrioritySliderValue(task.Priority);
+            updatePriorityLabel(prioritySlider.value);
+            detailsArea.value = task.Details;
             saveButton.setAttribute('data-task-id', task.Task_Id);
             saveButton.style.display = 'block';
             clearSelection();
@@ -334,6 +484,19 @@
             }
             if (getSelectedDays().length === 7) {
                 everydayButton.classList.add('selected');
+            }
+        }
+
+        function getPrioritySliderValue(priority) {
+            switch (priority) {
+                case 'Low':
+                    return '1';
+                case 'Medium':
+                    return '2';
+                case 'High':
+                    return '3';
+                default:
+                    return '2';
             }
         }
 
@@ -418,6 +581,19 @@
         async function reorderTasks(taskId) {
             // Implement task reordering logic if needed
             // This example doesn't include backend support for task ordering
+        }
+
+        function getPriorityColor(priority) {
+            switch (priority) {
+                case 'Low':
+                    return '#f44336'; // Red
+                case 'Medium':
+                    return '#ffc107'; // Yellow
+                case 'High':
+                    return '#4caf50'; // Green
+                default:
+                    return '#ffc107'; // Yellow
+            }
         }
 
         document.addEventListener('DOMContentLoaded', loadTasks);
