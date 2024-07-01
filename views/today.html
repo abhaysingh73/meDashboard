@@ -6,7 +6,7 @@
     <title>Today's Tasks</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             background-color: #f4f4f4;
             margin: 0;
             padding: 20px;
@@ -17,27 +17,60 @@
         }
         .card {
             width: 400px;
-            background: #fff;
+            background: #ffffff;
             padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
             text-align: center;
         }
         .card h2 {
             margin-top: 0;
+            font-size: 24px;
+            color: #333;
+        }
+        .currentTime {
+            font-size: 14px;
+            color: #666;
         }
         .tasks {
             margin-top: 20px;
             text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px; /* Add padding to compensate for scrollbar */
         }
         .task-item {
+            display: flex;
+            align-items: center;
             margin-bottom: 10px;
+        }
+        .task-item label {
+            margin-left: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+        .task-item input[type="checkbox"] {
+            -webkit-appearance: none; /* Remove default checkbox appearance */
+            width: 20px;
+            height: 20px;
+            border: 2px solid #007aff; /* iOS blue color */
+            border-radius: 5px;
+            cursor: pointer;
+            outline: none;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .task-item input[type="checkbox"]:checked {
+            background-color: #007aff; /* iOS blue color */
+        }
+        .task-item input[type="checkbox"]:checked + label {
+            color: #007aff; /* iOS blue color */
         }
     </style>
 </head>
 <body>
     <div class="card">
         <h2 id="dayHeading"></h2>
-        <div id="currentTime"></div>
+        <div class="currentTime" id="currentTime"></div>
         <div class="tasks" id="taskList"></div>
     </div>
 
@@ -49,32 +82,53 @@
 
             // Get current date and time
             const now = new Date();
-            const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' }); // Ensure consistent day name
+            const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' });
 
             dayHeading.textContent = `${dayOfWeek} - ${now.toLocaleDateString('en-US')}`;
-            currentTime.textContent = `Current Time: ${now.toLocaleTimeString('en-US')}`;
+            currentTime.textContent = `${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' })}`;
 
             // Fetch tasks for today from the backend
             try {
-                const response = await fetch('http://localhost:3000/api/tasks');
+                const response = await fetch('http://localhost:3000/api/statistics');
                 if (!response.ok) {
-                    throw new Error('Failed to fetch tasks');
+                    throw new Error('Failed to fetch statistics');
                 }
-                const tasks = await response.json();
-
-                // Filter tasks for the current day
-                const todayTasks = tasks.filter(task => task.Days[dayOfWeek]);
+                const statistics = await response.json();
+                const todayTasks = statistics.tasks;
 
                 // Display tasks in the list
-                todayTasks.forEach(task => {
+                for (const [task, status] of Object.entries(todayTasks)) {
                     const taskItem = document.createElement('div');
                     taskItem.classList.add('task-item');
                     taskItem.innerHTML = `
-                        <input type="checkbox" id="${task.Task_Id}">
-                        <label for="${task.Task_Id}">${task.Task}</label>
+                        <input type="checkbox" id="${task}" ${status ? 'checked' : ''}>
+                        <label for="${task}">${task}</label>
                     `;
                     taskList.appendChild(taskItem);
-                });
+
+                    // Add event listener for checkbox change
+                    const checkbox = taskItem.querySelector('input[type="checkbox"]');
+                    checkbox.addEventListener('change', async function() {
+                        const updatedTasks = { [task]: checkbox.checked };
+
+                        try {
+                            const response = await fetch('http://localhost:3000/api/statistics', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ tasks: updatedTasks })
+                            });
+                            if (!response.ok) {
+                                throw new Error('Failed to update statistics');
+                            }
+                            const updatedStatistics = await response.json();
+                            console.log('Statistics updated:', updatedStatistics);
+                        } catch (error) {
+                            console.error('Error updating statistics:', error);
+                        }
+                    });
+                }
             } catch (error) {
                 console.error('Error fetching tasks:', error);
             }

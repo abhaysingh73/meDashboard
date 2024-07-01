@@ -6,38 +6,56 @@
     <title>Notepad</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             background-color: #f4f4f4;
             margin: 0;
             padding: 20px;
         }
-        #noteList {
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .header {
+            text-align: center;
             margin-bottom: 20px;
+        }
+        #noteList {
+            margin: 0;
             padding: 0;
             list-style: none;
         }
-        #noteList li {
+        .note-item {
             position: relative;
             background: #fff;
-            margin: 5px 0;
-            padding: 10px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             cursor: move;
+            transition: box-shadow 0.3s ease-in-out;
         }
-        #noteList li .days {
+        .note-item:hover {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .note-item .days {
             display: inline-block;
             font-size: 0.8em;
-            color: #999;
+            color: #777;
             margin-left: 10px;
-            vertical-align: super;
+            vertical-align: middle;
         }
-        #noteList li .action-buttons {
+        .note-item .action-buttons {
             display: none;
             position: absolute;
-            top: 10px;
+            top: 50%;
             right: 10px;
+            transform: translateY(-50%);
         }
-        #noteList li:hover .action-buttons {
+        .note-item:hover .action-buttons {
             display: block;
         }
         .action-buttons button {
@@ -47,57 +65,85 @@
             color: #fff;
             border: none;
             cursor: pointer;
+            border-radius: 5px;
+            outline: none;
         }
         .action-buttons .delete-button {
             background: #f44336;
         }
         .day-buttons {
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
         }
         .day-buttons button {
-            margin-right: 5px;
-            padding: 5px 10px;
-            background: #ccc;
-            color: #000;
+            margin: 5px;
+            padding: 8px 12px;
+            background: #eee;
+            color: #555;
             border: none;
             cursor: pointer;
+            border-radius: 5px;
+            outline: none;
+            transition: background-color 0.3s ease-in-out;
         }
         .day-buttons button.selected {
             background: #4caf50;
             color: #fff;
         }
         #noteArea {
-            display: block;
-            width: 100%;
-            height: 100px;
-            margin-bottom: 10px;
+            width: calc(100% - 40px);
+            height: 120px;
+            margin: 10px 0;
             padding: 10px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            outline: none;
+            resize: none;
+            font-size: 16px;
+            transition: box-shadow 0.3s ease-in-out;
+        }
+        #noteArea:focus {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
         #saveButton {
             display: none;
-            padding: 10px 20px;
+            width: 100px;
+            margin: 10px 0;
+            padding: 10px;
             background: #4caf50;
             color: #fff;
             border: none;
+            border-radius: 5px;
             cursor: pointer;
+            outline: none;
+            transition: background-color 0.3s ease-in-out;
+        }
+        #saveButton:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
-    <ul id="noteList"></ul>
-    <div class="day-buttons">
-        <button id="everyday">Everyday</button>
-        <button class="day" data-day="Monday">Monday</button>
-        <button class="day" data-day="Tuesday">Tuesday</button>
-        <button class="day" data-day="Wednesday">Wednesday</button>
-        <button class="day" data-day="Thursday">Thursday</button>
-        <button class="day" data-day="Friday">Friday</button>
-        <button class="day" data-day="Saturday">Saturday</button>
-        <button class="day" data-day="Sunday">Sunday</button>
+    <div class="container">
+        <h2 class="header">Notepad</h2>
+        <ul id="noteList"></ul>
+        <div class="day-buttons">
+            <button id="everyday">Everyday</button>
+            <button class="day" data-day="Monday">Monday</button>
+            <button class="day" data-day="Tuesday">Tuesday</button>
+            <button class="day" data-day="Wednesday">Wednesday</button>
+            <button class="day" data-day="Thursday">Thursday</button>
+            <button class="day" data-day="Friday">Friday</button>
+            <button class="day" data-day="Saturday">Saturday</button>
+            <button class="day" data-day="Sunday">Sunday</button>
+        </div>
+        <textarea id="noteArea" placeholder="Add new task"></textarea>
+        <button id="saveButton">SAVE</button>
     </div>
-    <textarea id="noteArea" placeholder="Write your note here..."></textarea>
-    <button id="saveButton">SAVE</button>
 
     <script>
         const noteArea = document.getElementById('noteArea');
@@ -107,7 +153,7 @@
         const dayButtons = document.querySelectorAll('.day');
 
         noteArea.addEventListener('input', () => {
-            saveButton.style.display = noteArea.value.trim() ? 'inline-block' : 'none';
+            saveButton.style.display = noteArea.value.trim() ? 'block' : 'none';
         });
 
         saveButton.addEventListener('click', async () => {
@@ -235,41 +281,43 @@
 
         function addNoteToList(task) {
             const listItem = document.createElement('li');
+            listItem.className = 'note-item';
             listItem.draggable = true;
             listItem.setAttribute('data-id', task.Task_Id);
             listItem.innerHTML = `
                 ${task.Task} <span class="days">${formatDays(task.Days)}</span>
+                <div class="action-buttons">
+                    <button class="edit-button">EDIT</button>
+                    <button class="delete-button">DELETE</button>
+                </div>
             `;
 
-            const actionButtons = document.createElement('div');
-            actionButtons.className = 'action-buttons';
+            listItem.querySelector('.edit-button').addEventListener('click', () => editNoteItem(listItem, task));
+            listItem.querySelector('.delete-button').addEventListener('click', () => deleteNoteItem(listItem, task.Task_Id));
 
-            const editButton = document.createElement('button');
-            editButton.textContent = 'EDIT';
-            editButton.addEventListener('click', () => editNoteItem(listItem, task));
-
-            const deleteButton = document.createElement('button');
-            deleteButton.className = 'delete-button';
-            deleteButton.textContent = 'DELETE';
-            deleteButton.addEventListener('click', () => deleteNoteItem(listItem, task.Task_Id));
-
-            actionButtons.appendChild(editButton);
-            actionButtons.appendChild(deleteButton);
-
-            listItem.appendChild(actionButtons);
-            noteList.insertBefore(listItem, noteList.firstChild);
-
+            noteList.appendChild(listItem);
             addDragAndDropHandlers(listItem);
         }
+
         function formatDays(days) {
-            return Object.keys(days)
+            const selectedDays = Object.keys(days).filter(day => days[day]);
+            if (selectedDays.length === 7) {
+                return 'Everyday';
+            } else {
+                return Object.keys(days)
                 .filter(day => days[day])
                 .join(', ');
+            }
         }
+
         function updateNoteInList(taskId, updatedTask) {
             const listItem = noteList.querySelector(`li[data-id="${taskId}"]`);
             listItem.innerHTML = `
                 ${updatedTask.Task} <span class="days">${formatDays(updatedTask.Days)}</span>
+                <div class="action-buttons">
+                    <button class="edit-button">EDIT</button>
+                    <button class="delete-button">DELETE</button>
+                </div>
             `;
             addDragAndDropHandlers(listItem);
         }
@@ -277,7 +325,8 @@
         function editNoteItem(listItem, task) {
             noteArea.value = task.Task;
             saveButton.setAttribute('data-task-id', task.Task_Id);
-            saveButton.style.display = 'inline-block';
+            saveButton.style.display = 'block';
+            clearSelection();
             for (let day in task.Days) {
                 if (task.Days[day]) {
                     document.querySelector(`.day[data-day="${day}"]`).classList.add('selected');
@@ -325,7 +374,7 @@
             dragSrcEl = this;
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', this.outerHTML);
-            this.style.opacity = '0.4';
+            this.classList.add('dragging');
         }
 
         function handleDragOver(e) {
@@ -349,7 +398,6 @@
                 e.stopPropagation();
             }
             if (dragSrcEl !== this) {
-                dragSrcEl.parentNode.removeChild(dragSrcEl);
                 const dropHTML = e.dataTransfer.getData('text/html');
                 this.insertAdjacentHTML('beforebegin', dropHTML);
                 const dropElem = this.previousSibling;
@@ -361,14 +409,14 @@
         }
 
         function handleDragEnd() {
-            this.style.opacity = '1';
+            this.classList.remove('dragging');
             noteList.querySelectorAll('.over').forEach(item => {
                 item.classList.remove('over');
             });
         }
 
         async function reorderTasks(taskId) {
-            // Update task order in the backend if needed
+            // Implement task reordering logic if needed
             // This example doesn't include backend support for task ordering
         }
 

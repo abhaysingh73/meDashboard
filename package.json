@@ -1,0 +1,22 @@
+{
+  "name": "medashboard",
+  "version": "1.0.0",
+  "description": "personal dashboard",
+  "main": "app.js",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "moment": "^2.30.1",
+    "mongoose": "^8.4.4",
+    "uuid": "^10.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "meDashboard"
+  },
+  "author": "abhay",
+  "license": "ISC"
+}
