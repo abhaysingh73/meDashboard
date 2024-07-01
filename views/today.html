@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Today's Tasks</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .card {
+            width: 400px;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .card h2 {
+            margin-top: 0;
+        }
+        .tasks {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .task-item {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2 id="dayHeading"></h2>
+        <div id="currentTime"></div>
+        <div class="tasks" id="taskList"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const dayHeading = document.getElementById('dayHeading');
+            const currentTime = document.getElementById('currentTime');
+            const taskList = document.getElementById('taskList');
+
+            // Get current date and time
+            const now = new Date();
+            const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' }); // Ensure consistent day name
+
+            dayHeading.textContent = `${dayOfWeek} - ${now.toLocaleDateString('en-US')}`;
+            currentTime.textContent = `Current Time: ${now.toLocaleTimeString('en-US')}`;
+
+            // Fetch tasks for today from the backend
+            try {
+                const response = await fetch('http://localhost:3000/api/tasks');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch tasks');
+                }
+                const tasks = await response.json();
+
+                // Filter tasks for the current day
+                const todayTasks = tasks.filter(task => task.Days[dayOfWeek]);
+
+                // Display tasks in the list
+                todayTasks.forEach(task => {
+                    const taskItem = document.createElement('div');
+                    taskItem.classList.add('task-item');
+                    taskItem.innerHTML = `
+                        <input type="checkbox" id="${task.Task_Id}">
+                        <label for="${task.Task_Id}">${task.Task}</label>
+                    `;
+                    taskList.appendChild(taskItem);
+                });
+            } catch (error) {
+                console.error('Error fetching tasks:', error);
+            }
+        });
+    </script>
+</body>
+</html>

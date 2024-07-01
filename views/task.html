@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notepad</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        #noteList {
+            margin-bottom: 20px;
+            padding: 0;
+            list-style: none;
+        }
+        #noteList li {
+            position: relative;
+            background: #fff;
+            margin: 5px 0;
+            padding: 10px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            cursor: move;
+        }
+        #noteList li .days {
+            display: inline-block;
+            font-size: 0.8em;
+            color: #999;
+            margin-left: 10px;
+            vertical-align: super;
+        }
+        #noteList li .action-buttons {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        #noteList li:hover .action-buttons {
+            display: block;
+        }
+        .action-buttons button {
+            margin-left: 5px;
+            padding: 5px 10px;
+            background: #4caf50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        .action-buttons .delete-button {
+            background: #f44336;
+        }
+        .day-buttons {
+            margin-bottom: 10px;
+        }
+        .day-buttons button {
+            margin-right: 5px;
+            padding: 5px 10px;
+            background: #ccc;
+            color: #000;
+            border: none;
+            cursor: pointer;
+        }
+        .day-buttons button.selected {
+            background: #4caf50;
+            color: #fff;
+        }
+        #noteArea {
+            display: block;
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            padding: 10px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        #saveButton {
+            display: none;
+            padding: 10px 20px;
+            background: #4caf50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <ul id="noteList"></ul>
+    <div class="day-buttons">
+        <button id="everyday">Everyday</button>
+        <button class="day" data-day="Monday">Monday</button>
+        <button class="day" data-day="Tuesday">Tuesday</button>
+        <button class="day" data-day="Wednesday">Wednesday</button>
+        <button class="day" data-day="Thursday">Thursday</button>
+        <button class="day" data-day="Friday">Friday</button>
+        <button class="day" data-day="Saturday">Saturday</button>
+        <button class="day" data-day="Sunday">Sunday</button>
+    </div>
+    <textarea id="noteArea" placeholder="Write your note here..."></textarea>
+    <button id="saveButton">SAVE</button>
+
+    <script>
+        const noteArea = document.getElementById('noteArea');
+        const saveButton = document.getElementById('saveButton');
+        const noteList = document.getElementById('noteList');
+        const everydayButton = document.getElementById('everyday');
+        const dayButtons = document.querySelectorAll('.day');
+
+        noteArea.addEventListener('input', () => {
+            saveButton.style.display = noteArea.value.trim() ? 'inline-block' : 'none';
+        });
+
+        saveButton.addEventListener('click', async () => {
+            const noteText = noteArea.value.trim();
+            if (noteText) {
+                const selectedDays = getSelectedDays();
+                const taskId = saveButton.getAttribute('data-task-id');
+
+                if (taskId) {
+                    // Editing existing task
+                    try {
+                        const updatedTask = {
+                            Task: noteText,
+                            Days: createDaysObject(selectedDays),
+                        };
+                        const response = await fetch(`http://localhost:3000/api/tasks/${taskId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(updatedTask),
+                        });
+                        if (response.ok) {
+                            const updatedTaskData = await response.json();
+                            updateNoteInList(taskId, updatedTaskData);
+                            noteArea.value = '';
+                            saveButton.removeAttribute('data-task-id');
+                            saveButton.style.display = 'none';
+                            clearSelection();
+                        } else {
+                            console.error('Failed to update task');
+                        }
+                    } catch (error) {
+                        console.error('Error updating task:', error);
+                    }
+                } else {
+                    // Adding new task
+                    try {
+                        const newTask = {
+                            Task: noteText,
+                            Days: createDaysObject(selectedDays),
+                        };
+                        const response = await fetch('http://localhost:3000/api/tasks', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(newTask),
+                        });
+                        if (response.ok) {
+                            const savedTask = await response.json();
+                            addNoteToList(savedTask);
+                            noteArea.value = '';
+                            saveButton.style.display = 'none';
+                            clearSelection();
+                        } else {
+                            console.error('Failed to add task');
+                        }
+                    } catch (error) {
+                        console.error('Error adding task:', error);
+                    }
+                }
+            }
+        });
+
+        everydayButton.addEventListener('click', () => {
+            clearSelection();
+            everydayButton.classList.add('selected');
+        });
+
+        dayButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (everydayButton.classList.contains('selected')) {
+                    everydayButton.classList.remove('selected');
+                }
+                button.classList.toggle('selected');
+            });
+        });
+
+        function getSelectedDays() {
+            if (everydayButton.classList.contains('selected')) {
+                return ['Everyday'];
+            } else {
+                const selected = [];
+                dayButtons.forEach(button => {
+                    if (button.classList.contains('selected')) {
+                        selected.push(button.getAttribute('data-day'));
+                    }
+                });
+                return selected.length ? selected : ['Everyday'];
+            }
+        }
+
+        function createDaysObject(selectedDays) {
+            const days = {
+                Monday: false,
+                Tuesday: false,
+                Wednesday: false,
+                Thursday: false,
+                Friday: false,
+                Saturday: false,
+                Sunday: false,
+            };
+            if (selectedDays.includes('Everyday')) {
+                for (let day in days) {
+                    days[day] = true;
+                }
+            } else {
+                selectedDays.forEach(day => {
+                    days[day] = true;
+                });
+            }
+            return days;
+        }
+
+        async function loadTasks() {
+            try {
+                const response = await fetch('http://localhost:3000/api/tasks');
+                const tasks = await response.json();
+                tasks.forEach(task => addNoteToList(task));
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+            }
+        }
+
+        function addNoteToList(task) {
+            const listItem = document.createElement('li');
+            listItem.draggable = true;
+            listItem.setAttribute('data-id', task.Task_Id);
+            listItem.innerHTML = `
+                ${task.Task} <span class="days">${formatDays(task.Days)}</span>
+            `;
+
+            const actionButtons = document.createElement('div');
+            actionButtons.className = 'action-buttons';
+
+            const editButton = document.createElement('button');
+            editButton.textContent = 'EDIT';
+            editButton.addEventListener('click', () => editNoteItem(listItem, task));
+
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'delete-button';
+            deleteButton.textContent = 'DELETE';
+            deleteButton.addEventListener('click', () => deleteNoteItem(listItem, task.Task_Id));
+
+            actionButtons.appendChild(editButton);
+            actionButtons.appendChild(deleteButton);
+
+            listItem.appendChild(actionButtons);
+            noteList.insertBefore(listItem, noteList.firstChild);
+
+            addDragAndDropHandlers(listItem);
+        }
+
+        function formatDays(days) {
+            return Object.keys(days)
+                .filter(day => days[day])
+                .join(', ');
+        }
+
+        function updateNoteInList(taskId, updatedTask) {
+            const listItem = noteList.querySelector(`li[data-id="${taskId}"]`);
+            listItem.innerHTML = `
+                ${updatedTask.Task} <span class="days">${formatDays(updatedTask.Days)}</span>
+            `;
+            addDragAndDropHandlers(listItem);
+        }
+
+        function editNoteItem(listItem, task) {
+            noteArea.value = task.Task;
+            saveButton.setAttribute('data-task-id', task.Task_Id);
+            saveButton.style.display = 'inline-block';
+            for (let day in task.Days) {
+                if (task.Days[day]) {
+                    document.querySelector(`.day[data-day="${day}"]`).classList.add('selected');
+                }
+            }
+            if (getSelectedDays().length === 7) {
+                everydayButton.classList.add('selected');
+            }
+        }
+
+        async function deleteNoteItem(listItem, taskId) {
+            try {
+                const response = await fetch(`http://localhost:3000/api/tasks/${taskId}`, {
+                    method: 'DELETE',
+                });
+                if (response.ok) {
+                    noteList.removeChild(listItem);
+                } else {
+                    console.error('Failed to delete task');
+                }
+            } catch (error) {
+                console.error('Error deleting task:', error);
+            }
+        }
+
+        function clearSelection() {
+            everydayButton.classList.remove('selected');
+            dayButtons.forEach(button => {
+                button.classList.remove('selected');
+            });
+        }
+
+        function addDragAndDropHandlers(item) {
+            item.addEventListener('dragstart', handleDragStart, false);
+            item.addEventListener('dragenter', handleDragEnter, false);
+            item.addEventListener('dragover', handleDragOver, false);
+            item.addEventListener('dragleave', handleDragLeave, false);
+            item.addEventListener('drop', handleDrop, false);
+            item.addEventListener('dragend', handleDragEnd, false);
+        }
+
+        let dragSrcEl = null;
+
+        function handleDragStart(e) {
+            dragSrcEl = this;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+            this.style.opacity = '0.4';
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter() {
+            this.classList.add('over');
+        }
+
+        function handleDragLeave() {
+            this.classList.remove('over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            if (dragSrcEl !== this) {
+                dragSrcEl.parentNode.removeChild(dragSrcEl);
+                const dropHTML = e.dataTransfer.getData('text/html');
+                this.insertAdjacentHTML('beforebegin', dropHTML);
+                const dropElem = this.previousSibling;
+                addDragAndDropHandlers(dropElem);
+                const taskId = dropElem.getAttribute('data-id');
+                reorderTasks(taskId);
+            }
+            return false;
+        }
+
+        function handleDragEnd() {
+            this.style.opacity = '1';
+            noteList.querySelectorAll('.over').forEach(item => {
+                item.classList.remove('over');
+            });
+        }
+
+        async function reorderTasks(taskId) {
+            // Update task order in the backend if needed
+            // This example doesn't include backend support for task ordering
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTasks);
+    </script>
+</body>
+</html>
