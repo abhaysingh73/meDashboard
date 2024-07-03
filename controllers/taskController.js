@@ -17,7 +17,7 @@ exports.createTask = async (req, res) => {
         statsController.initializeStatistics();
         res.status(201).json(newTask);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to create task' });
+        res.status(500).json({ error: 'Failed to create task' + error.stack });
     }
 };
 

@@ -44,8 +44,7 @@ exports.statistics = async (req, res) => {
     }
 };
 
-// Initialize today's statistics
-exports.initializeStatistics = async () => {
+initializeStatistics = async () => {
     try {
         // Fetch tasks from tasksdb collection
         const tasks = await Task.find({});
@@ -101,6 +100,9 @@ exports.initializeStatistics = async () => {
         console.error('Error initializing statistics:', error);
     }
 };
+
+// Initialize today's statistics
+exports.initializeStatistics = initializeStatistics;
 
 exports.getTodaysStatistics = async (req, res) => {
     try {
