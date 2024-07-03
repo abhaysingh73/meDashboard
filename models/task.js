@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const connection = mongoose.createConnection("mongodb://0.0.0.0/taskdb");
 const taskSchema = new mongoose.Schema({
     Created_On: {
         type: Date,
@@ -43,4 +43,4 @@ const taskSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Task', taskSchema);
+module.exports = connection.model('Task', taskSchema);
